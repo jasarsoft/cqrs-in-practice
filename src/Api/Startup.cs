@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using System.Collections.Generic;
+using Logic.Decorators;
 
 namespace Api
 {
@@ -22,9 +23,14 @@ namespace Api
         {
             services.AddMvc();
 
+            var config = new Config(3);
+            services.AddSingleton(config);
+
             services.AddSingleton(new SessionFactory(Configuration["ConnectionString"]));
             services.AddTransient<UnitOfWork>();
-            services.AddTransient<ICommandHandler<EditPersonalInfoCommand>, EditPersonalInfoCommandHandler>();
+            services.AddTransient<ICommandHandler<EditPersonalInfoCommand>>(provider => 
+                new DatabaseRetryDecorator<EditPersonalInfoCommand>(
+                    new EditPersonalInfoCommandHandler(provider.GetService<SessionFactory>()), provider.GetService<Config>()));
             services.AddTransient<ICommandHandler<RegisterCommand>, RegisterCommandHandler>();
             services.AddTransient<ICommandHandler<UnregisterCommand>, UnregisterCommandHandler>();
             services.AddTransient<ICommandHandler<EnrollCommand>, EnrollCommandHandler>();
