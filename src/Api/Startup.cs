@@ -29,8 +29,9 @@ namespace Api
             services.AddSingleton(new SessionFactory(Configuration["ConnectionString"]));
             services.AddTransient<UnitOfWork>();
             services.AddTransient<ICommandHandler<EditPersonalInfoCommand>>(provider => 
-                new DatabaseRetryDecorator<EditPersonalInfoCommand>(
-                    new EditPersonalInfoCommandHandler(provider.GetService<SessionFactory>()), provider.GetService<Config>()));
+                new AuditLoggingDecorator<EditPersonalInfoCommand>(new DatabaseRetryDecorator<EditPersonalInfoCommand>(
+                    new EditPersonalInfoCommandHandler(provider.GetService<SessionFactory>()), provider.GetService<Config>()))
+                );
             services.AddTransient<ICommandHandler<RegisterCommand>, RegisterCommandHandler>();
             services.AddTransient<ICommandHandler<UnregisterCommand>, UnregisterCommandHandler>();
             services.AddTransient<ICommandHandler<EnrollCommand>, EnrollCommandHandler>();
